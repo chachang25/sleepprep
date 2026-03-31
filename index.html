@@ -117,6 +117,38 @@
           <p class="text-stone-500 text-sm">until bedtime</p>
         </div>
       </div>
+
+      <!-- Upcoming Reminder Section -->
+      <div class="glass rounded-2xl p-6 mb-6">
+        <div class="flex items-center justify-between mb-4">
+          <div class="flex items-center gap-3">
+            <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6 6 0 10-12 0v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+            <span class="font-sans text-sm text-stone-400">Pre-Bed Reminder</span>
+          </div>
+          <span id="reminder-time-display" class="font-serif text-lg text-stone-300"></span>
+        </div>
+        <div id="reminder-status" class="text-center mb-4">
+          <p id="time-until-reminder" class="font-serif text-2xl text-stone-300 mb-1"></p>
+          <p class="text-stone-500 text-sm">until reminder</p>
+        </div>
+        <div class="border-t border-stone-800 pt-4">
+          <p class="text-stone-500 text-xs mb-3">You'll be reminded to:</p>
+          <div class="flex flex-wrap gap-2">
+            <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-stone-800/50 text-stone-400 text-xs">
+              <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+              Take meds
+            </span>
+            <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-stone-800/50 text-stone-400 text-xs">
+              <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+              Dim lights
+            </span>
+            <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-stone-800/50 text-stone-400 text-xs">
+              <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
+              Warm shower
+            </span>
+          </div>
+        </div>
+      </div>
       <div class="space-y-3">
         <button onclick="navigate('breathing')" class="w-full glass rounded-xl p-4 flex items-center justify-between group hover:bg-stone-900/60 transition-colors">
           <div class="flex items-center gap-4">
@@ -424,6 +456,37 @@
       const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
       document.getElementById('time-until-bed').textContent = hours + 'h ' + minutes + 'm';
       document.getElementById('bedtime-display').textContent = formatTime(hour, minute);
+      updateReminderCountdown();
+    }
+
+    function updateReminderCountdown() {
+      const now = new Date();
+      const hour = settings.useOverride ? settings.overrideHour : settings.bedtimeHour;
+      const minute = settings.useOverride ? settings.overrideMinute : settings.bedtimeMinute;
+      
+      // Reminder is 1 hour before bedtime
+      const reminderTime = new Date();
+      reminderTime.setHours(hour - 1, minute, 0, 0);
+      if (reminderTime <= now) reminderTime.setDate(reminderTime.getDate() + 1);
+      
+      const diff = reminderTime - now;
+      const hours = Math.floor(diff / (1000 * 60 * 60));
+      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      
+      // Update reminder time display
+      document.getElementById('reminder-time-display').textContent = formatTime(hour - 1 < 0 ? 23 : hour - 1, minute);
+      
+      // Update countdown or show "Active now" if within the reminder window
+      const bedtime = new Date();
+      bedtime.setHours(hour, minute, 0, 0);
+      if (bedtime <= now) bedtime.setDate(bedtime.getDate() + 1);
+      
+      const statusEl = document.getElementById('reminder-status');
+      if (now >= reminderTime && now < bedtime) {
+        statusEl.innerHTML = '<p class="font-serif text-2xl text-primary mb-1">Active now</p><p class="text-stone-500 text-sm">Time to prepare for bed!</p>';
+      } else {
+        document.getElementById('time-until-reminder').textContent = hours + 'h ' + minutes + 'm';
+      }
     }
 
     function formatTime(hour, minute) {
