@@ -1,0 +1,722 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sleep Prep Hub</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Manrope:wght@300;400;500;600&family=Work+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            stone: {
+              950: '#0C0A09',
+              900: '#1C1917',
+              800: '#292524',
+              700: '#44403C',
+              600: '#57534E',
+              500: '#78716C',
+              400: '#A8A29E',
+              300: '#D6D3D1',
+              200: '#E7E5E4',
+            },
+            primary: '#D4A373',
+          },
+          fontFamily: {
+            serif: ['Cormorant Garamond', 'serif'],
+            sans: ['Manrope', 'sans-serif'],
+            body: ['Work Sans', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body { 
+      background-color: #0C0A09; 
+      color: #E7E5E4;
+      font-family: 'Manrope', sans-serif;
+    }
+    .glass {
+      background: rgba(28, 25, 23, 0.4);
+      backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    .nav-pill.active { background: rgba(212, 163, 115, 0.15); }
+    .nav-pill:hover { background: rgba(212, 163, 115, 0.1); }
+    .breathing-circle {
+      background: radial-gradient(circle, rgba(212, 163, 115, 0.3) 0%, rgba(212, 163, 115, 0.1) 70%, transparent 100%);
+      transition: transform 0.1s linear, opacity 0.1s linear;
+    }
+    .textarea-journal, .input-minimal {
+      background: transparent;
+      border: none;
+      border-bottom: 1px solid #292524;
+      padding: 0.75rem 0;
+      color: #E7E5E4;
+      width: 100%;
+      font-family: 'Work Sans', sans-serif;
+      outline: none;
+      transition: border-color 0.3s ease;
+    }
+    .textarea-journal:focus, .input-minimal:focus { border-color: #D4A373; }
+    .textarea-journal::placeholder, .input-minimal::placeholder { color: #57534E; }
+    .journal-divider {
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(212, 163, 115, 0.3), transparent);
+      margin: 2rem 0;
+    }
+    .page { display: none; }
+    .page.active { display: block; }
+    .progress-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: #57534E;
+    }
+    .progress-dot.active { background: #D4A373; }
+    .progress-dot.completed { background: #D4A373; opacity: 0.5; }
+  </style>
+</head>
+<body class="min-h-screen">
+  <!-- Pre-bed Reminder Banner -->
+  <div id="reminder-banner" class="fixed top-4 left-4 right-4 z-50 max-w-md mx-auto hidden">
+    <div class="glass rounded-xl p-4">
+      <div class="flex items-center justify-between mb-3">
+        <div class="flex items-center gap-2">
+          <svg class="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6 6 0 10-12 0v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+          <span class="font-sans text-sm text-stone-300">Pre-Bed Checklist</span>
+        </div>
+        <button onclick="dismissReminder()" class="text-stone-500 hover:text-stone-300 text-sm">Dismiss</button>
+      </div>
+      <div class="space-y-2" id="reminder-items"></div>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <main class="max-w-md mx-auto min-h-screen px-6 pt-12 pb-24">
+    
+    <!-- Home Page -->
+    <div id="page-home" class="page active">
+      <div class="text-center mb-12">
+        <h1 class="font-serif text-4xl tracking-tight text-stone-200 mb-2">Good Evening</h1>
+        <p class="font-sans text-stone-500 text-sm tracking-widest uppercase">Prepare for rest</p>
+      </div>
+      <p id="current-time" class="font-serif text-6xl text-stone-200 text-center mb-12"></p>
+      <div class="glass rounded-2xl p-6 mb-6">
+        <div class="flex items-center justify-between mb-4">
+          <div class="flex items-center gap-3">
+            <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/></svg>
+            <span class="font-sans text-sm text-stone-400">Bedtime</span>
+          </div>
+          <span id="bedtime-display" class="font-serif text-lg text-stone-300"></span>
+        </div>
+        <div class="text-center">
+          <p id="time-until-bed" class="font-serif text-3xl text-stone-200 mb-2"></p>
+          <p class="text-stone-500 text-sm">until bedtime</p>
+        </div>
+      </div>
+      <div class="space-y-3">
+        <button onclick="navigate('breathing')" class="w-full glass rounded-xl p-4 flex items-center justify-between group hover:bg-stone-900/60 transition-colors">
+          <div class="flex items-center gap-4">
+            <div class="w-10 h-10 rounded-full bg-stone-800 flex items-center justify-center">
+              <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/></svg>
+            </div>
+            <div class="text-left">
+              <p class="font-sans text-stone-200">Box Breathing</p>
+              <p class="text-stone-500 text-sm">Calm your mind</p>
+            </div>
+          </div>
+          <svg class="w-5 h-5 text-stone-600 group-hover:text-stone-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+        </button>
+        <button onclick="navigate('journal')" class="w-full glass rounded-xl p-4 flex items-center justify-between group hover:bg-stone-900/60 transition-colors">
+          <div class="flex items-center gap-4">
+            <div class="w-10 h-10 rounded-full bg-stone-800 flex items-center justify-center">
+              <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            </div>
+            <div class="text-left">
+              <p class="font-sans text-stone-200">Evening Journal</p>
+              <p class="text-stone-500 text-sm">Reflect & plan</p>
+            </div>
+          </div>
+          <svg class="w-5 h-5 text-stone-600 group-hover:text-stone-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Breathing Page -->
+    <div id="page-breathing" class="page">
+      <div class="text-center mb-8">
+        <h1 class="font-serif text-3xl tracking-tight text-stone-200 mb-2">Box Breathing</h1>
+        <p id="breathing-info" class="font-sans text-stone-500 text-sm">4 cycles • 4s intervals</p>
+      </div>
+      <div class="flex-1 flex flex-col items-center justify-center min-h-[50vh]">
+        <div class="relative w-64 h-64 flex items-center justify-center mb-8">
+          <div class="absolute inset-0 rounded-full border border-stone-800"></div>
+          <div id="breathing-circle" class="breathing-circle w-48 h-48 rounded-full flex items-center justify-center">
+            <div class="text-center">
+              <p id="breathing-phase" class="font-serif text-2xl text-stone-200">Ready</p>
+              <p id="breathing-countdown" class="text-stone-500 text-sm mt-1 hidden"></p>
+            </div>
+          </div>
+          <div id="cycle-dots" class="absolute -bottom-12 flex gap-2"></div>
+        </div>
+        <p id="cycle-counter" class="text-stone-500 text-sm mb-8">Cycle 1 of 4</p>
+        <div class="flex items-center gap-4">
+          <button onclick="resetBreathing()" class="p-3 rounded-full bg-stone-900 border border-stone-800 hover:bg-stone-800 text-stone-400 transition-colors">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+          </button>
+          <button id="play-pause-btn" onclick="toggleBreathing()" class="w-16 h-16 rounded-full bg-primary hover:bg-primary/90 flex items-center justify-center text-stone-900 transition-colors">
+            <svg id="play-icon" class="w-6 h-6 ml-1" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+            <svg id="pause-icon" class="w-6 h-6 hidden" fill="currentColor" viewBox="0 0 24 24"><path d="M6 4h4v16H6zM14 4h4v16h-4z"/></svg>
+          </button>
+          <button onclick="toggleBreathingSettings()" id="breathing-settings-btn" class="p-3 rounded-full bg-stone-900 border border-stone-800 hover:bg-stone-800 text-stone-400 transition-colors">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+          </button>
+        </div>
+      </div>
+      <div id="breathing-settings" class="glass rounded-2xl p-6 mt-8 hidden">
+        <h3 class="font-sans text-stone-300 text-sm mb-6">Settings</h3>
+        <div class="space-y-6">
+          <div>
+            <div class="flex justify-between mb-3">
+              <label class="text-stone-400 text-sm">Interval Duration</label>
+              <span id="interval-value" class="text-stone-200 text-sm font-medium">4s</span>
+            </div>
+            <input type="range" id="interval-slider" min="2" max="10" value="4" class="w-full accent-primary">
+          </div>
+          <div>
+            <div class="flex justify-between mb-3">
+              <label class="text-stone-400 text-sm">Number of Cycles</label>
+              <span id="cycles-value" class="text-stone-200 text-sm font-medium">4</span>
+            </div>
+            <input type="range" id="cycles-slider" min="1" max="10" value="4" class="w-full accent-primary">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Journal Page -->
+    <div id="page-journal" class="page">
+      <div class="text-center mb-10">
+        <h1 class="font-serif text-3xl tracking-tight text-stone-200 mb-2">Evening Journal</h1>
+        <p class="font-sans text-stone-500 text-sm">Clear your mind before sleep</p>
+      </div>
+      <section class="mb-10">
+        <div class="flex items-center gap-3 mb-4">
+          <div class="w-8 h-8 rounded-full bg-stone-800 flex items-center justify-center">
+            <svg class="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+          </div>
+          <h2 class="font-sans text-stone-300 text-sm font-medium">Daily Reflection</h2>
+        </div>
+        <p id="daily-prompt" class="text-stone-400 text-sm mb-4 italic">"Loading prompt..."</p>
+        <textarea id="reflection-input" placeholder="Write your thoughts..." class="textarea-journal" rows="4"></textarea>
+      </section>
+      <div class="journal-divider"></div>
+      <section class="mb-10">
+        <div class="flex items-center gap-3 mb-4">
+          <div class="w-8 h-8 rounded-full bg-stone-800 flex items-center justify-center">
+            <svg class="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+          </div>
+          <h2 class="font-sans text-stone-300 text-sm font-medium">Tomorrow's Big 3</h2>
+        </div>
+        <p class="text-stone-500 text-xs mb-4">Just 3 priorities for tomorrow. This stops your brain from processing tasks while you sleep.</p>
+        <div class="space-y-3">
+          <div class="flex items-center gap-3"><span class="text-primary text-sm font-medium w-6">1.</span><input type="text" id="big3-1" placeholder="Priority 1" class="input-minimal"></div>
+          <div class="flex items-center gap-3"><span class="text-primary text-sm font-medium w-6">2.</span><input type="text" id="big3-2" placeholder="Priority 2" class="input-minimal"></div>
+          <div class="flex items-center gap-3"><span class="text-primary text-sm font-medium w-6">3.</span><input type="text" id="big3-3" placeholder="Priority 3" class="input-minimal"></div>
+        </div>
+      </section>
+      <div class="journal-divider"></div>
+      <section class="mb-10">
+        <div class="flex items-center justify-between mb-4">
+          <div class="flex items-center gap-3">
+            <div class="w-8 h-8 rounded-full bg-stone-800 flex items-center justify-center">
+              <svg class="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+            </div>
+            <h2 class="font-sans text-stone-300 text-sm font-medium">Worry Dump</h2>
+          </div>
+          <button id="worry-timer-btn" onclick="startWorryTimer()" class="flex items-center gap-2 px-3 py-1.5 rounded-full text-xs bg-stone-800 text-stone-400 hover:bg-stone-700">
+            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            <span id="worry-timer-text">2 min</span>
+          </button>
+        </div>
+        <p class="text-stone-500 text-xs mb-4">List anything actively stressing you. Externalizing it onto paper quiets the rumination loop.</p>
+        <textarea id="worry-dump-input" placeholder="Let it all out..." class="textarea-journal" rows="4"></textarea>
+      </section>
+      <div class="journal-divider"></div>
+      <section class="mb-10">
+        <div class="flex items-center gap-3 mb-4">
+          <div class="w-8 h-8 rounded-full bg-stone-800 flex items-center justify-center">
+            <svg class="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
+          </div>
+          <h2 class="font-sans text-stone-300 text-sm font-medium">Gratitude Anchor</h2>
+        </div>
+        <p class="text-stone-500 text-xs mb-4">End with exactly 1 specific thing you're grateful for. Not generic — make it real.</p>
+        <input type="text" id="gratitude-input" placeholder="Today I'm grateful for..." class="input-minimal">
+      </section>
+      <div class="fixed bottom-20 left-0 right-0 px-6">
+        <div class="max-w-md mx-auto flex gap-3">
+          <button onclick="clearJournal()" class="flex-shrink-0 px-4 py-4 rounded-full bg-stone-900 border border-stone-800 text-stone-400 hover:bg-stone-800 transition-colors text-sm">Clear</button>
+          <button onclick="completeJournal()" class="flex-1 py-4 rounded-full bg-primary hover:bg-primary/90 text-stone-900 font-medium transition-colors flex items-center justify-center gap-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+            <span>Complete Journal</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Settings Page -->
+    <div id="page-settings" class="page">
+      <div class="text-center mb-10">
+        <h1 class="font-serif text-3xl tracking-tight text-stone-200 mb-2">Settings</h1>
+        <p class="font-sans text-stone-500 text-sm">Customize your bedtime routine</p>
+      </div>
+      <section class="glass rounded-2xl p-6 mb-6">
+        <div class="flex items-center justify-between mb-4">
+          <div class="flex items-center gap-3">
+            <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6 6 0 10-12 0v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+            <span class="font-sans text-stone-200">Push Notifications</span>
+          </div>
+          <button id="notification-btn" onclick="enableNotifications()" class="text-xs text-primary bg-primary/10 px-3 py-1.5 rounded-full hover:bg-primary/20 transition-colors">Enable</button>
+        </div>
+        <p class="text-stone-500 text-sm">Get reminded 1 hour before bedtime to take meds, dim lights, and shower.</p>
+      </section>
+      <section class="glass rounded-2xl p-6 mb-6">
+        <div class="flex items-center gap-3 mb-6">
+          <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          <span class="font-sans text-stone-200">Regular Bedtime</span>
+        </div>
+        <div class="text-center mb-6">
+          <p id="settings-bedtime" class="font-serif text-5xl text-stone-200">9:00 PM</p>
+        </div>
+        <div class="space-y-6">
+          <div>
+            <div class="flex justify-between mb-3">
+              <label class="text-stone-400 text-sm">Hour</label>
+              <span id="hour-value" class="text-stone-300 text-sm">9 PM</span>
+            </div>
+            <input type="range" id="hour-slider" min="18" max="23" value="21" class="w-full accent-primary" onchange="updateBedtime()">
+          </div>
+          <div>
+            <div class="flex justify-between mb-3">
+              <label class="text-stone-400 text-sm">Minute</label>
+              <span id="minute-value" class="text-stone-300 text-sm">00</span>
+            </div>
+            <input type="range" id="minute-slider" min="0" max="55" step="5" value="0" class="w-full accent-primary" onchange="updateBedtime()">
+          </div>
+        </div>
+      </section>
+      <section class="glass rounded-2xl p-6 mb-6">
+        <div class="flex items-center justify-between mb-4">
+          <div class="flex items-center gap-3">
+            <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/></svg>
+            <span class="font-sans text-stone-200">Tonight's Override</span>
+          </div>
+          <label class="relative inline-flex items-center cursor-pointer">
+            <input type="checkbox" id="override-toggle" class="sr-only peer" onchange="toggleOverride()">
+            <div class="w-9 h-5 bg-stone-700 rounded-full peer peer-checked:bg-primary peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all"></div>
+          </label>
+        </div>
+        <p class="text-stone-500 text-sm">Adjust tonight's bedtime without changing your regular schedule.</p>
+        <div id="override-settings" class="pt-4 mt-4 border-t border-stone-800 hidden">
+          <div class="text-center mb-6">
+            <p id="override-time" class="font-serif text-4xl text-primary">10:00 PM</p>
+            <p class="text-stone-500 text-xs mt-2">Tonight only</p>
+          </div>
+          <div class="space-y-6">
+            <div>
+              <div class="flex justify-between mb-3">
+                <label class="text-stone-400 text-sm">Hour</label>
+                <span id="override-hour-value" class="text-stone-300 text-sm">10 PM</span>
+              </div>
+              <input type="range" id="override-hour-slider" min="18" max="23" value="22" class="w-full accent-primary" onchange="updateOverride()">
+            </div>
+            <div>
+              <div class="flex justify-between mb-3">
+                <label class="text-stone-400 text-sm">Minute</label>
+                <span id="override-minute-value" class="text-stone-300 text-sm">00</span>
+              </div>
+              <input type="range" id="override-minute-slider" min="0" max="55" step="5" value="0" class="w-full accent-primary" onchange="updateOverride()">
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+  </main>
+
+  <!-- Bottom Navigation -->
+  <nav class="fixed bottom-0 left-0 right-0 bg-stone-950/95 backdrop-blur-xl border-t border-white/5 px-4 py-3 z-50">
+    <div class="max-w-md mx-auto flex justify-around items-center">
+      <button onclick="navigate('home')" class="nav-pill active flex flex-col items-center gap-1 px-4 py-2 rounded-xl" data-page="home">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/></svg>
+        <span class="text-xs">Home</span>
+      </button>
+      <button onclick="navigate('breathing')" class="nav-pill flex flex-col items-center gap-1 px-4 py-2 rounded-xl" data-page="breathing">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M14 10l-2 1m0 0l-2-1m2 1v2.5M20 7l-2 1m2-1l-2-1m2 1v2.5M14 4l-2-1-2 1M4 7l2-1M4 7l2 1M4 7v2.5M12 21l-2-1m2 1l2-1m-2 1v-2.5M6 18l-2-1v-2.5M18 18l2-1v-2.5"/></svg>
+        <span class="text-xs">Breathe</span>
+      </button>
+      <button onclick="navigate('journal')" class="nav-pill flex flex-col items-center gap-1 px-4 py-2 rounded-xl" data-page="journal">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+        <span class="text-xs">Journal</span>
+      </button>
+      <button onclick="navigate('settings')" class="nav-pill flex flex-col items-center gap-1 px-4 py-2 rounded-xl" data-page="settings">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+        <span class="text-xs">Settings</span>
+      </button>
+    </div>
+  </nav>
+
+  <script>
+    // State
+    let settings = JSON.parse(localStorage.getItem('sleepSettings')) || { bedtimeHour: 21, bedtimeMinute: 0, useOverride: false, overrideHour: 22, overrideMinute: 0 };
+    let breathingSettings = JSON.parse(localStorage.getItem('breathingSettings')) || { interval: 4, cycles: 4 };
+    let breathingState = { isActive: false, phase: 0, cycle: 1, progress: 0, completed: false };
+    let breathingAnimationId = null;
+    let breathingStartTime = null;
+    let worryTimerInterval = null;
+    let worryTimeLeft = 120;
+    let reminderDismissed = false;
+    const PHASES = ['Inhale', 'Hold', 'Exhale', 'Hold'];
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', () => {
+      updateClock();
+      setInterval(updateClock, 1000);
+      loadSettings();
+      loadBreathingSettings();
+      fetchPrompt();
+      checkReminder();
+      setInterval(checkReminder, 60000);
+      renderCycleDots();
+    });
+
+    // Navigation
+    function navigate(page) {
+      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+      document.getElementById('page-' + page).classList.add('active');
+      document.querySelectorAll('.nav-pill').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.page === page);
+        const color = btn.dataset.page === page ? '#D4A373' : '#78716C';
+        btn.querySelector('svg').style.color = color;
+        btn.querySelector('span').style.color = color;
+      });
+    }
+
+    // Clock
+    function updateClock() {
+      const now = new Date();
+      document.getElementById('current-time').textContent = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+      updateTimeUntilBed();
+    }
+
+    function updateTimeUntilBed() {
+      const now = new Date();
+      const hour = settings.useOverride ? settings.overrideHour : settings.bedtimeHour;
+      const minute = settings.useOverride ? settings.overrideMinute : settings.bedtimeMinute;
+      const bedtime = new Date();
+      bedtime.setHours(hour, minute, 0, 0);
+      if (bedtime <= now) bedtime.setDate(bedtime.getDate() + 1);
+      const diff = bedtime - now;
+      const hours = Math.floor(diff / (1000 * 60 * 60));
+      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      document.getElementById('time-until-bed').textContent = hours + 'h ' + minutes + 'm';
+      document.getElementById('bedtime-display').textContent = formatTime(hour, minute);
+    }
+
+    function formatTime(hour, minute) {
+      const d = new Date();
+      d.setHours(hour, minute);
+      return d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+    }
+
+    // Settings
+    function loadSettings() {
+      document.getElementById('hour-slider').value = settings.bedtimeHour;
+      document.getElementById('minute-slider').value = settings.bedtimeMinute;
+      document.getElementById('override-hour-slider').value = settings.overrideHour;
+      document.getElementById('override-minute-slider').value = settings.overrideMinute;
+      document.getElementById('override-toggle').checked = settings.useOverride;
+      updateBedtime();
+      updateOverride();
+      if (settings.useOverride) document.getElementById('override-settings').classList.remove('hidden');
+    }
+
+    function updateBedtime() {
+      const hour = parseInt(document.getElementById('hour-slider').value);
+      const minute = parseInt(document.getElementById('minute-slider').value);
+      settings.bedtimeHour = hour;
+      settings.bedtimeMinute = minute;
+      document.getElementById('hour-value').textContent = (hour > 12 ? hour - 12 : hour) + ' ' + (hour >= 12 ? 'PM' : 'AM');
+      document.getElementById('minute-value').textContent = minute.toString().padStart(2, '0');
+      document.getElementById('settings-bedtime').textContent = formatTime(hour, minute);
+      saveSettings();
+    }
+
+    function updateOverride() {
+      const hour = parseInt(document.getElementById('override-hour-slider').value);
+      const minute = parseInt(document.getElementById('override-minute-slider').value);
+      settings.overrideHour = hour;
+      settings.overrideMinute = minute;
+      document.getElementById('override-hour-value').textContent = (hour > 12 ? hour - 12 : hour) + ' ' + (hour >= 12 ? 'PM' : 'AM');
+      document.getElementById('override-minute-value').textContent = minute.toString().padStart(2, '0');
+      document.getElementById('override-time').textContent = formatTime(hour, minute);
+      saveSettings();
+    }
+
+    function toggleOverride() {
+      settings.useOverride = document.getElementById('override-toggle').checked;
+      document.getElementById('override-settings').classList.toggle('hidden', !settings.useOverride);
+      saveSettings();
+      updateTimeUntilBed();
+    }
+
+    function saveSettings() {
+      localStorage.setItem('sleepSettings', JSON.stringify(settings));
+    }
+
+    // Breathing
+    function loadBreathingSettings() {
+      document.getElementById('interval-slider').value = breathingSettings.interval;
+      document.getElementById('cycles-slider').value = breathingSettings.cycles;
+      document.getElementById('interval-value').textContent = breathingSettings.interval + 's';
+      document.getElementById('cycles-value').textContent = breathingSettings.cycles;
+      document.getElementById('breathing-info').textContent = breathingSettings.cycles + ' cycles • ' + breathingSettings.interval + 's intervals';
+      document.getElementById('interval-slider').oninput = () => {
+        breathingSettings.interval = parseInt(document.getElementById('interval-slider').value);
+        document.getElementById('interval-value').textContent = breathingSettings.interval + 's';
+        document.getElementById('breathing-info').textContent = breathingSettings.cycles + ' cycles • ' + breathingSettings.interval + 's intervals';
+        localStorage.setItem('breathingSettings', JSON.stringify(breathingSettings));
+      };
+      document.getElementById('cycles-slider').oninput = () => {
+        breathingSettings.cycles = parseInt(document.getElementById('cycles-slider').value);
+        document.getElementById('cycles-value').textContent = breathingSettings.cycles;
+        document.getElementById('breathing-info').textContent = breathingSettings.cycles + ' cycles • ' + breathingSettings.interval + 's intervals';
+        renderCycleDots();
+        localStorage.setItem('breathingSettings', JSON.stringify(breathingSettings));
+      };
+    }
+
+    function renderCycleDots() {
+      const container = document.getElementById('cycle-dots');
+      container.innerHTML = '';
+      for (let i = 0; i < breathingSettings.cycles; i++) {
+        const dot = document.createElement('div');
+        dot.className = 'progress-dot' + (i + 1 < breathingState.cycle ? ' completed' : '') + (i + 1 === breathingState.cycle && breathingState.isActive ? ' active' : '');
+        container.appendChild(dot);
+      }
+    }
+
+    function toggleBreathing() {
+      if (breathingState.completed) {
+        resetBreathing();
+        setTimeout(() => { breathingState.isActive = true; startBreathingAnimation(); }, 100);
+      } else {
+        breathingState.isActive = !breathingState.isActive;
+        if (breathingState.isActive) startBreathingAnimation();
+        else cancelAnimationFrame(breathingAnimationId);
+      }
+      updateBreathingUI();
+    }
+
+    function startBreathingAnimation() {
+      breathingStartTime = Date.now();
+      animateBreathing();
+    }
+
+    function animateBreathing() {
+      if (!breathingState.isActive) return;
+      const elapsed = (Date.now() - breathingStartTime) / 1000;
+      const progress = Math.min(elapsed / breathingSettings.interval, 1);
+      breathingState.progress = progress;
+      if (progress >= 1) {
+        const nextPhase = (breathingState.phase + 1) % 4;
+        if (nextPhase === 0) {
+          if (breathingState.cycle >= breathingSettings.cycles) {
+            breathingState.completed = true;
+            breathingState.isActive = false;
+            updateBreathingUI();
+            return;
+          }
+          breathingState.cycle++;
+        }
+        breathingState.phase = nextPhase;
+        breathingStartTime = Date.now();
+        renderCycleDots();
+      }
+      updateBreathingCircle();
+      breathingAnimationId = requestAnimationFrame(animateBreathing);
+    }
+
+    function updateBreathingCircle() {
+      const circle = document.getElementById('breathing-circle');
+      let scale = 1, opacity = 0.5;
+      if (breathingState.isActive || breathingState.completed) {
+        const p = breathingState.progress;
+        switch (breathingState.phase) {
+          case 0: scale = 1 + 0.4 * p; opacity = 0.5 + 0.5 * p; break;
+          case 1: scale = 1.4; opacity = 1; break;
+          case 2: scale = 1.4 - 0.4 * p; opacity = 1 - 0.5 * p; break;
+          case 3: scale = 1; opacity = 0.5; break;
+        }
+      }
+      circle.style.transform = 'scale(' + scale + ')';
+      circle.style.opacity = opacity;
+      circle.style.boxShadow = '0 0 ' + (40 * opacity) + 'px rgba(212, 163, 115, ' + (0.3 * opacity) + ')';
+    }
+
+    function updateBreathingUI() {
+      const phaseEl = document.getElementById('breathing-phase');
+      const countdownEl = document.getElementById('breathing-countdown');
+      const playIcon = document.getElementById('play-icon');
+      const pauseIcon = document.getElementById('pause-icon');
+      phaseEl.textContent = breathingState.completed ? 'Complete' : (breathingState.isActive ? PHASES[breathingState.phase] : 'Ready');
+      countdownEl.classList.toggle('hidden', !breathingState.isActive);
+      if (breathingState.isActive) countdownEl.textContent = Math.ceil(breathingSettings.interval - breathingState.progress * breathingSettings.interval) + 's';
+      playIcon.classList.toggle('hidden', breathingState.isActive);
+      pauseIcon.classList.toggle('hidden', !breathingState.isActive);
+      document.getElementById('cycle-counter').textContent = breathingState.completed ? 'All cycles complete' : 'Cycle ' + breathingState.cycle + ' of ' + breathingSettings.cycles;
+      updateBreathingCircle();
+    }
+
+    function resetBreathing() {
+      breathingState = { isActive: false, phase: 0, cycle: 1, progress: 0, completed: false };
+      cancelAnimationFrame(breathingAnimationId);
+      renderCycleDots();
+      updateBreathingUI();
+    }
+
+    function toggleBreathingSettings() {
+      document.getElementById('breathing-settings').classList.toggle('hidden');
+    }
+
+    // Journal
+    async function fetchPrompt() {
+      try {
+        const res = await fetch('/api/journal-prompt');
+        const data = await res.json();
+        document.getElementById('daily-prompt').textContent = '"' + data.prompt + '"';
+      } catch (e) {
+        document.getElementById('daily-prompt').textContent = '"What was meaningful about today?"';
+      }
+    }
+
+    function startWorryTimer() {
+      if (worryTimerInterval) return;
+      worryTimeLeft = 120;
+      const btn = document.getElementById('worry-timer-btn');
+      btn.classList.remove('bg-stone-800', 'text-stone-400');
+      btn.classList.add('bg-primary/20', 'text-primary');
+      worryTimerInterval = setInterval(() => {
+        worryTimeLeft--;
+        const mins = Math.floor(worryTimeLeft / 60);
+        const secs = worryTimeLeft % 60;
+        document.getElementById('worry-timer-text').textContent = mins + ':' + secs.toString().padStart(2, '0');
+        if (worryTimeLeft <= 0) {
+          clearInterval(worryTimerInterval);
+          worryTimerInterval = null;
+          btn.classList.add('bg-stone-800', 'text-stone-400');
+          btn.classList.remove('bg-primary/20', 'text-primary');
+          document.getElementById('worry-timer-text').textContent = '2 min';
+          alert("Time's up! You've externalized your worries. Let them go.");
+        }
+      }, 1000);
+    }
+
+    function clearJournal() {
+      document.getElementById('reflection-input').value = '';
+      document.getElementById('big3-1').value = '';
+      document.getElementById('big3-2').value = '';
+      document.getElementById('big3-3').value = '';
+      document.getElementById('worry-dump-input').value = '';
+      document.getElementById('gratitude-input').value = '';
+    }
+
+    function completeJournal() {
+      const hasContent = document.getElementById('reflection-input').value || 
+        document.getElementById('big3-1').value || document.getElementById('big3-2').value || document.getElementById('big3-3').value ||
+        document.getElementById('worry-dump-input').value || document.getElementById('gratitude-input').value;
+      if (hasContent) {
+        alert('Journal complete! Sweet dreams. Your mind is clear.');
+        clearJournal();
+      } else {
+        alert('Your journal is empty. Take a moment to reflect before bed.');
+      }
+    }
+
+    // Notifications
+    function enableNotifications() {
+      if (!('Notification' in window)) { alert('This browser does not support notifications'); return; }
+      Notification.requestPermission().then(permission => {
+        if (permission === 'granted') {
+          document.getElementById('notification-btn').textContent = 'Enabled';
+          document.getElementById('notification-btn').classList.remove('bg-primary/10', 'text-primary');
+          document.getElementById('notification-btn').classList.add('bg-green-500/10', 'text-green-500');
+          scheduleNotification();
+        }
+      });
+    }
+
+    function scheduleNotification() {
+      const hour = settings.useOverride ? settings.overrideHour : settings.bedtimeHour;
+      const minute = settings.useOverride ? settings.overrideMinute : settings.bedtimeMinute;
+      const now = new Date();
+      const reminderTime = new Date();
+      reminderTime.setHours(hour - 1, minute, 0, 0);
+      if (reminderTime <= now) reminderTime.setDate(reminderTime.getDate() + 1);
+      const delay = reminderTime - now;
+      setTimeout(() => {
+        new Notification('Time to prepare for bed!', { body: 'Take your meds, dim the lights, and take a warm shower.' });
+      }, delay);
+    }
+
+    // Pre-bed reminder
+    function checkReminder() {
+      if (reminderDismissed) return;
+      const hour = settings.useOverride ? settings.overrideHour : settings.bedtimeHour;
+      const minute = settings.useOverride ? settings.overrideMinute : settings.bedtimeMinute;
+      const now = new Date();
+      const reminderTime = new Date(); reminderTime.setHours(hour - 1, minute, 0, 0);
+      const bedtime = new Date(); bedtime.setHours(hour, minute, 0, 0);
+      if (now >= reminderTime && now < bedtime) {
+        showReminder();
+      } else {
+        document.getElementById('reminder-banner').classList.add('hidden');
+      }
+    }
+
+    function showReminder() {
+      const banner = document.getElementById('reminder-banner');
+      const items = document.getElementById('reminder-items');
+      const reminders = JSON.parse(localStorage.getItem('preBedReminders')) || { meds: false, lights: false, shower: false };
+      items.innerHTML = [
+        { key: 'meds', label: 'Take medications' },
+        { key: 'lights', label: 'Dim the lights' },
+        { key: 'shower', label: 'Take warm shower' }
+      ].map(item => `
+        <button onclick="toggleReminder('${item.key}')" class="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-stone-900/50 ${reminders[item.key] ? 'opacity-60' : ''}">
+          <div class="w-5 h-5 border-2 ${reminders[item.key] ? 'bg-primary border-primary' : 'border-stone-600'} rounded flex items-center justify-center">
+            ${reminders[item.key] ? '<svg class="w-3 h-3 text-stone-900" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>' : ''}
+          </div>
+          <span class="text-stone-300 text-sm ${reminders[item.key] ? 'line-through' : ''}">${item.label}</span>
+        </button>
+      `).join('');
+      banner.classList.remove('hidden');
+    }
+
+    function toggleReminder(key) {
+      const reminders = JSON.parse(localStorage.getItem('preBedReminders')) || { meds: false, lights: false, shower: false };
+      reminders[key] = !reminders[key];
+      localStorage.setItem('preBedReminders', JSON.stringify(reminders));
+      showReminder();
+    }
+
+    function dismissReminder() {
+      reminderDismissed = true;
+      document.getElementById('reminder-banner').classList.add('hidden');
+    }
+  </script>
+</body>
+</html>
