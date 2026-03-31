@@ -547,7 +547,17 @@
         renderCycleDots();
       }
       updateBreathingCircle();
+      updateBreathingText();
       breathingAnimationId = requestAnimationFrame(animateBreathing);
+    }
+
+    function updateBreathingText() {
+      const phaseEl = document.getElementById('breathing-phase');
+      const countdownEl = document.getElementById('breathing-countdown');
+      phaseEl.textContent = PHASES[breathingState.phase];
+      countdownEl.classList.remove('hidden');
+      countdownEl.textContent = Math.ceil(breathingSettings.interval - breathingState.progress * breathingSettings.interval) + 's';
+      document.getElementById('cycle-counter').textContent = 'Cycle ' + breathingState.cycle + ' of ' + breathingSettings.cycles;
     }
 
     function updateBreathingCircle() {
