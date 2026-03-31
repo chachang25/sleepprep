@@ -184,7 +184,7 @@
         <p id="breathing-info" class="font-sans text-stone-500 text-sm">4 cycles • 4s intervals</p>
       </div>
       <div class="flex-1 flex flex-col items-center justify-center min-h-[50vh]">
-        <div class="relative w-64 h-64 flex items-center justify-center mb-8">
+        <div class="relative w-64 h-64 flex items-center justify-center mb-16">
           <div class="absolute inset-0 rounded-full border border-stone-800"></div>
           <div id="breathing-circle" class="breathing-circle w-48 h-48 rounded-full flex items-center justify-center">
             <div class="text-center">
@@ -192,8 +192,8 @@
               <p id="breathing-countdown" class="text-stone-500 text-sm mt-1 hidden"></p>
             </div>
           </div>
-          <div id="cycle-dots" class="absolute -bottom-12 flex gap-2"></div>
         </div>
+        <div id="cycle-dots" class="flex gap-2 mb-3"></div>
         <p id="cycle-counter" class="text-stone-500 text-sm mb-8">Cycle 1 of 4</p>
         <div class="flex items-center gap-4">
           <button onclick="resetBreathing()" class="p-3 rounded-full bg-stone-900 border border-stone-800 hover:bg-stone-800 text-stone-400 transition-colors">
