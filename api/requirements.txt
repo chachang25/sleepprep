@@ -1,2 +1,1 @@
-# Vercel Python runtime requirements
-# Keep minimal for serverless cold start performance
+# No dependencies needed - using Python standard library only
